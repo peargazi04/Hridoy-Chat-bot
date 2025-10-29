@@ -1,5 +1,5 @@
 module.exports = function({ sequelize, Sequelize }) {
-	let Currencies = sequelize.define('Currencies', {
+	let Users = sequelize.define('Users', {
 		num: {
 			type: Sequelize.INTEGER,
 			primaryKey: true,
@@ -9,18 +9,13 @@ module.exports = function({ sequelize, Sequelize }) {
 			type: Sequelize.BIGINT,
 			unique: true
 		},
-		money: {
-			type: Sequelize.BIGINT,
-			defaultValue: 0
-		},
-        exp: {
-            type: Sequelize.BIGINT,
-            defaultValue: 0
+        name: {
+            type: Sequelize.STRING
         },
 		data: {
 			type: Sequelize.JSON
 		}
 	});
 
-	return Currencies;
+	return Users;
 }
