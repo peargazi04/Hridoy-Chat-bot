@@ -156,4 +156,4 @@ module.exports.homeDir = function () {
 	}
 
 	return [typeof os.homedir === 'function' ? os.homedir() : returnHome, typeSystem];
-            }
+}
