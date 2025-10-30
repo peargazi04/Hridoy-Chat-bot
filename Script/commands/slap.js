@@ -2,7 +2,7 @@ module.exports.config = {
   name: "slap",
   version: "1.0.0",
   hasPermssion: 0,
-  credits: "𝐂𝐘𝐁𝐄𝐑 ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝑨𝑴_ ☢️+Hridoy",
+  credits: "𝐂𝐘𝐁𝐄𝐑 ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝑨𝑴_ ☢️",
   description: "Slap the friend tag",
   commandCategory: "general",
   usages: "slap [Tag someone you want to slap]",
