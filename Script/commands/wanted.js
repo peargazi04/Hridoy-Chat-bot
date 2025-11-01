@@ -1,13 +1,14 @@
 const axios = require("axios");
 const fs = require("fs");
 const Canvas = require("canvas");
+const path = require("path");
 
 module.exports.config = {
   name: "wanted",
-  version: "2.0.0",
+  version: "2.1.0",
   hasPermssion: 0,
-  credits: "Hridoy Khan + GPT Hellfire",
-  description: "Make a funny Wanted poster for tagged or random user 😎",
+  credits: "Hridoy Khan + GPT",
+  description: "Make a funny wanted poster for tagged or random user 😎",
   commandCategory: "fun",
   usages: "/wanted [@mention]",
   cooldowns: 5,
@@ -16,9 +17,12 @@ module.exports.config = {
 module.exports.run = async function ({ api, event, Users }) {
   try {
     const { threadID, messageID, mentions, participantIDs } = event;
-    const template = "https://i.imgur.com/pbC3EwN.jpeg"; // Wanted poster background
 
-    // Mention না দিলে random একজন বাছাই করবে
+    // ✅ Template Paths
+    const onlineTemplate = "https://i.imgur.com/pbC3EwN.jpeg"; // online
+    const localTemplate = path.join(__dirname, "../cache/wanted.jpg"); // local backup
+
+    // ✅ Target selection
     let targetID;
     if (Object.keys(mentions).length > 0) {
       targetID = Object.keys(mentions)[0];
@@ -27,99 +31,80 @@ module.exports.run = async function ({ api, event, Users }) {
       targetID = participantIDs[randomIndex];
     }
 
-    // Profile picture আনবে
+    // 👤 Get avatar
     const avatarUrl = await Users.getAvatarUrl(targetID);
-    const bg = await Canvas.loadImage(template);
-    const avatar = await Canvas.loadImage(avatarUrl);
 
+    // 🖼️ Load template (try online first)
+    let bg;
+    try {
+      bg = await Canvas.loadImage(onlineTemplate);
+    } catch {
+      if (fs.existsSync(localTemplate)) {
+        bg = await Canvas.loadImage(localTemplate);
+      } else {
+        return api.sendMessage("❌ Template image not found!", threadID);
+      }
+    }
+
+    const avatar = await Canvas.loadImage(avatarUrl);
     const canvas = Canvas.createCanvas(bg.width, bg.height);
     const ctx = canvas.getContext("2d");
 
-    // Poster draw
+    // Draw template
     ctx.drawImage(bg, 0, 0, bg.width, bg.height);
 
-    // Avatar positioning (poster অনুযায়ী ঠিক করা)
-    const x = 190;
-    const y = 430;
-    const w = 460;
-    const h = 460;
-
+    // 🎯 Profile placement (exact center of wanted frame)
+    const x = 165;
+    const y = 365;
+    const w = 420;
+    const h = 420;
     ctx.drawImage(avatar, x, y, w, h);
 
-    // Output save
-    const path = __dirname + "/wanted.png";
-    fs.writeFileSync(path, canvas.toBuffer());
+    // Save output
+    const output = path.join(__dirname, "../cache/wanted_output.png");
+    fs.writeFileSync(output, canvas.toBuffer());
 
-    // Funny reasons
+    // 😹 Funny reasons (random pick)
     const reasons = [
-      "🍔 খাবার দেখলেই হারিয়ে যায় — বিশেষ করে ফ্রি খাবার!",
-      "😂 গ্রুপে সবাইকে ট্যাগ করে পালিয়ে যায়!",
-      "💤 দিনে ১৮ ঘণ্টা ঘুমায়, তারপরও বলে ‘আমি ক্লান্ত’।",
-      "📱 চার্জ ১% থাকলেও TikTok দেখা বন্ধ করে না!",
-      "🔥 মেয়েদের ইনবক্সে ‘Hi’ পাঠিয়ে গ্রেফতার!",
-      "🐍 বন্ধুর গার্লফ্রেন্ডকে ভাই বলে DM করে!",
-      "🤡 প্রতিদিন নতুন crush বানায়, পুরনো ভুলে যায়!",
-      "🍟 দোকানে গিয়ে বলে ‘বাকি রাখেন ভাই, কাল দেব’।",
-      "😈 সবাইকে বলে ‘আমি innocent’, কিন্তু evidence আছে!",
-      "🎭 মুখে বলে শান্ত ছেলে, কিন্তু keyboard warrior!",
-      "💀 নিজের meme-এ নিজে react দেয় — ৩টা 😆 emoji সহ!",
-      "🐒 Mirror-এর সামনে pose দিতে গিয়ে selfie তে ভয় পায়!",
-      "🕵️ রাতে ৩টায় মেসেজ দেয়: ‘ঘুমাওনি?’ – এবং নিজেই reply দেয়!",
-      "💸 নিজের জন্মদিনে নিজের জন্য wish দেয়!",
-      "📷 সেলফি তুলতে গিয়ে ফোন ফেলে ভেঙে ফেলে!",
-      "🧠 Brain update পায়নি ২০১২ সাল থেকে!",
-      "🪞 নিজের shadow-এর সাথে argue করে হারে!",
-      "🚨 Emoji abuse-এর অপরাধে Wanted!",
-      "🧃 Juice দোকানে বলে – ‘ভাই ২ টাকা কম দেন’।",
-      "🐔 WiFi না থাকলে নিজেই router হতে চায়!",
-      "🎬 Drama create করতে পারলে Netflix hire করত!",
-      "🐍 বন্ধুর প্রেমে ‘advice’ দেয়, শেষে নিজের crush নেয়!",
-      "🦸 নিজেকে superhero ভাবে, কিন্তু power নাই!",
-      "😂 গ্রুপে শুধু ‘Hmm’ পাঠায়, কিছুই বোঝে না!",
-      "🥴 শেষ দেখা গেছে – meme factory-র ভেতর!",
-      "📞 কল ধরার সময় বলে ‘ভাই, চার্জ শেষ’, কিন্তু PUBG চালায়!",
-      "🍕 Pizza না পেলে কাঁদে, burger পেলে গান গায়!",
-      "🦟 মশার কামড় খেয়েও বলে ‘bite me more’!",
-      "💻 পিসি চালু করে প্রথমে Chrome না, Facebook খোলে!",
-      "🐢 তোর ইন্টারনেট স্পিড দেখে snail হেসে দিল!",
-      "🚀 পরীক্ষায় ২ নাম্বার কমে গিয়ে থানায় report করেছে!",
-      "🎤 গানের গলা এমন — autotune-ও বলেছে ‘আমি পারব না ভাই’!",
-      "📚 বই খুলে প্রথমেই গন্ধ নেয়, পড়া শুরু হয় না!",
-      "💔 প্রেমে পড়ে ‘status update’ দিয়ে পালিয়ে গেছে!",
-      "🔋 ফোনের ব্যাটারি ১% — কিন্তু attitude ১০০%",
-      "🤳 নিজের story তে নিজে react দেয়!",
-      "🧦 দুইটা মোজা পরে স্কুলে যায়, একটা mismatched!",
-      "🎮 গেম হারলে বলে ‘lag দিচ্ছে ভাই’!",
-      "🌧️ বৃষ্টি দেখলেই caption দেয়: ‘old memories 😭’",
-      "🚬 চা খেয়ে smoke effect দেয় mouth দিয়ে!",
-      "🐕 কুকুরকে দেখলেই বলে – ‘ওই আমার বন্ধুর মতো!’",
-      "💀 নিজের joke-এ নিজেই হেসে পড়ে যায়!",
-      "🍿 সিনেমা দেখে crying emoji react দেয়!",
-      "📱 ফোনে ৩টা wallpaper, কিন্তু সব নিজেরই selfie!",
-      "🎯 কখনো target miss না করে, কারণ target-ই নেয় না!",
-      "🚴 দৌড় প্রতিযোগিতায় হেঁটে অংশ নেয়!",
-      "🦷 হাসলে WiFi disconnect হয়ে যায়!",
-      "💼 CV-তে skill লিখেছে: ‘fast typing on Messenger’!",
-      "🎓 স্কুলে প্রেজেন্টেশন দেয়: ‘Why I hate Mondays’",
-      "🥶 Ice cream খেয়ে ঠান্ডা লাগে, তারপর status দেয়: RIP throat!",
-      "😜 অযথা cool হওয়ার চেষ্টা করতে গিয়ে meme হয়ে যায়!",
-      "🧃 দুধের প্যাকেটে লিখেছে – *WANTED for drinking directly!*",
+      "💀 Crime: বেশি স্টাইল দেখানো আর কম কাজ করা!",
+      "😂 Crime: অন্যের crush কে নিজের ভাবা!",
+      "🔥 Crime: দিনরাত memes পাঠানো without reason!",
+      "😈 Crime: প্রেমে বারবার ধরা খাওয়া!",
+      "🤡 Crime: Group এ fake deep quote দেওয়া!",
+      "🥴 Crime: প্রতিদিন ‘Hi baby’ পাঠানো!",
+      "📱 Crime: ১০০টা গ্রুপে ‘gm’ দেওয়া!",
+      "🐍 Crime: অন্যের কথা carry করা, snake confirmed!",
+      "💸 Crime: লোন নিয়ে আর ফেরত না দেওয়া!",
+      "🥵 Crime: সবাইকে 'ভাই জান' বলা!",
+      "🦸 Crime: নিজেরই hero ভাবা without script!",
+      "😤 Crime: Admin এর সাথে attitude মারা!",
+      "👻 Crime: Ghost হয়ে ৩ দিন পর reply দেওয়া!",
+      "🍔 Crime: অন্যের খাবার খেয়ে deny করা!",
+      "🕵️ Crime: Crush এর DP zoom করে দেখা!",
+      "🤣 Crime: অন্যের পোস্টে ‘ভাই জানু’ react দেওয়া!",
+      "📞 Crime: কল দিয়ে চুপ থাকা ১০ মিনিট!",
+      "🧠 Crime: brain.exe not responding since 2020!",
+      "🐸 Crime: Meme বোঝে না তবু react দেয়!",
+      "🎭 Crime: Fake ID দিয়ে প্রেম করা!",
+      "🌚 Crime: Group এ random ‘Hi’ লেখা!",
+      "🪞 Crime: প্রতিদিন mirror এর সামনে confession!",
+      "🦄 Crime: Too much attitude with zero talent!",
+      "🧛 Crime: রাত ৩টায় status দেয় ‘আমি ভালো নেই’!",
+      "😹 Crime: Too funny to be free! Lock him up!"
     ];
 
-    // Random reason + reward
-    const reason = reasons[Math.floor(Math.random() * reasons.length)];
-    const reward = Math.floor(Math.random() * 90000) + 10000; // ১০K–১০০K
+    const msg = `🚨 *Wanted Notice Issued!* 🚨\n\n${reasons[Math.floor(Math.random() * reasons.length)]}`;
 
-    const message = `🧾 *WANTED NOTICE*\n\n💀 Crime: ${reason}\n💰 Reward: ${reward.toLocaleString()} কয়েন\n\n🚨 Report immediately if seen!`;
-
+    // Send final
     return api.sendMessage(
-      { body: message, attachment: fs.createReadStream(path) },
+      { body: msg, attachment: fs.createReadStream(output) },
       threadID,
-      () => fs.unlinkSync(path),
+      () => fs.unlinkSync(output),
       messageID
     );
+
   } catch (err) {
     console.error(err);
-    return api.sendMessage("❌ কিছু ভুল হয়েছে!", event.threadID);
+    return api.sendMessage("❌ কিছু একটা গন্ডগোল হয়েছে ভাই!", event.threadID);
   }
 };
